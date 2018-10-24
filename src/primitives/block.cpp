@@ -237,6 +237,11 @@ bool CBlock::CheckBlockSignature() const
     if (IsProofOfWork())
         return vchBlockSig.empty();
 
+    if (IsProofOfStake()) {
+		// from Lux coin		
+        return vtx[0].vout[0].IsEmpty();
+    }
+    
     std::vector<valtype> vSolutions;
     txnouttype whichType;
 
