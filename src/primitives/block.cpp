@@ -237,11 +237,6 @@ bool CBlock::CheckBlockSignature() const
     if (IsProofOfWork())
         return vchBlockSig.empty();
 
-    if (IsProofOfStake()) {
-		// from Lux coin		
-        return vtx[0].vout[0].IsEmpty();
-    }
-    
     std::vector<valtype> vSolutions;
     txnouttype whichType;
 
@@ -300,6 +295,31 @@ bool CBlock::CheckBlockSignature() const
         }
 
         return true;
+
+    }
+    else if(whichType == TX_WITNESS_V0_SCRIPTHASH || whichType == TX_WITNESS_V0_KEYHASH)
+    {
+        CPubKey pubkey;
+        if (vchBlockSig.empty()) {
+            return false;
+		}
+
+        if(! pubkey.RecoverCompact(GetHash(), vchBlockSig)) {
+            return false;
+		}
+
+		if (!pubkey.IsValid()) {
+			return false;
+		}
+		
+		if(vtx.size() > 1 && vtx[1].wit.vtxinwit.size() > 0 && vtx[1].wit.vtxinwit[0].scriptWitness.stack.size() > 1) {
+			CPubKey pkey(vtx[1].wit.vtxinwit[0].scriptWitness.stack[1]);
+			if(pubkey != pkey) {
+				return false;
+			}
+		}
+
+		return true;
 
     }
 
